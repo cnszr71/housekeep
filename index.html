@@ -92,6 +92,8 @@ tr.d-hazir{background:#eef9f1} tr.d-konaklamali{background:#f0f4f7} tr.d-cikis,t
 @media (max-width:640px){.sum{grid-template-columns:repeat(2,1fr)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 </head>
 <body>
 <div id="root"></div>
@@ -105,6 +107,15 @@ tr.d-hazir{background:#eef9f1} tr.d-konaklamali{background:#f0f4f7} tr.d-cikis,t
    Veriler tarayıcıda (localStorage) saklanır. Gerçek sürümde
    load()/save()/log() Supabase çağrılarıyla değiştirilecek.
    ========================================================= */
+
+const SUPABASE_URL = 'https://xcrpvucjgpjmlwqibjwu.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_F4vBWe6luYKgQ4dpla_hQQ_Nmcojh_J';
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
 const KEY = 'kh-demo-v11';
 const ANNEX = ['113','211','212','213','311','312','313','411','412','413'];
 
