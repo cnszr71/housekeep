@@ -771,5 +771,10 @@ setInterval(() => {
 autoRollover();
 render();
 </script>
+<script>
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(err => console.warn("Çevrimdışı kullanım etkinleştirilemedi:", err)));
+}
+</script>
 </body>
 </html>
