@@ -255,7 +255,7 @@ function buildTasks(only) {
 /* ---------- görünümler ---------- */
 function viewLogin() {
   return `<div class="login panel">
-    <svg class="hotel-logo" viewBox="0 0 310 72" role="img" aria-label="Ağaoğlu Oteli logosu"><rect x="0" y="0" width="310" height="72" rx="3" fill="#fff"/><path d="M5 7H64V38C64 51 51 62 34 68C17 62 5 51 5 38Z" fill="#7d1f2a" stroke="#b99a72" stroke-width="2"/><path d="M14 13H55V37C55 47 46 55 34 60C22 55 14 47 14 37Z" fill="none" stroke="#fff" stroke-width="1.5"/><text x="34" y="44" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="37" fill="#fff">A</text><path d="M78 13H306M78 57H306" stroke="#b99a72" stroke-width="1"/><text x="191" y="47" text-anchor="middle" font-family="Georgia,serif" font-size="30" letter-spacing="1" fill="#6f2028">AGAOGLU</text></svg><h2>Kat Hizmetleri</h2>
+    <img class="hotel-logo" src="logo-aga-sef.png" alt="Ağaoğlu Oteli logosu"><h2>Kat Hizmetleri</h2>
     <form id="loginForm" class="row" style="flex-direction:column;align-items:stretch">
       <label>Kullanıcı adı<input name="u" autocomplete="username" required></label>
       <label>Şifre<input name="p" type="password" autocomplete="current-password" required></label>
@@ -589,7 +589,7 @@ function render() {
   const unsent = isRecep ? buildTasks().length : 0;
   $('#root').innerHTML = `
     <header><div class="wrap">
-      <div class="brandline"><svg class="hotel-logo" viewBox="0 0 310 72" role="img" aria-label="Ağaoğlu Oteli logosu"><rect x="0" y="0" width="310" height="72" rx="3" fill="#fff"/><path d="M5 7H64V38C64 51 51 62 34 68C17 62 5 51 5 38Z" fill="#7d1f2a" stroke="#b99a72" stroke-width="2"/><path d="M14 13H55V37C55 47 46 55 34 60C22 55 14 47 14 37Z" fill="none" stroke="#fff" stroke-width="1.5"/><text x="34" y="44" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="37" fill="#fff">A</text><path d="M78 13H306M78 57H306" stroke="#b99a72" stroke-width="1"/><text x="191" y="47" text-anchor="middle" font-family="Georgia,serif" font-size="30" letter-spacing="1" fill="#6f2028">AGAOGLU</text></svg><h1>Kat Hizmetleri</h1></div>
+      <div class="brandline"><img class="hotel-logo" src="logo-aga-sef.png" alt="Ağaoğlu Oteli logosu"><h1>Kat Hizmetleri</h1></div>
       <span class="pill">${esc(me.ad)}</span>
       <button class="hbtn" data-act="sound" aria-pressed="${soundOn}">Ses ${soundOn ? 'açık' : 'kapalı'}</button>
       ${isRecep ? `<button class="hbtn" data-act="speak" aria-pressed="${speakOn}">Sesli okuma ${speakOn ? 'açık' : 'kapalı'}</button>` : ''}
