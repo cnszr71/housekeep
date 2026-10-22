@@ -67,7 +67,7 @@ tr.fl td{background:#f3f7f7;font-weight:600;color:var(--muted)}
 .cell b{font-size:1.1rem;display:block}
 .cell.c0{border-left-color:var(--s0);background:var(--s0bg)} .cell.c1{border-left-color:var(--s1);background:var(--s1bg)}
 .cell.c2{border-left-color:var(--s2);background:var(--s2bg)} .cell.c3{border-left-color:var(--s3);background:var(--s3bg)}
-.cell.kd{border-left-color:var(--bad);background:var(--badbg)} .cell.none{opacity:.65}
+.cell.kd,.cell.arizali{border-left-color:var(--bad);background:var(--badbg)} .cell.none{opacity:.65}
 .sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
 .sum div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 .sum b{display:block;font-size:1.4rem;line-height:1.1}
@@ -82,7 +82,7 @@ tr.fl td{background:#f3f7f7;font-weight:600;color:var(--muted)}
 .toast.acil{background:var(--bad)}
 .toast button{background:#fff;color:var(--ink);border:0;border-radius:5px;padding:3px 10px}
 
-tr.d-hazir{background:#eef9f1} tr.d-konaklamali{background:#f0f4f7} tr.d-cikis,tr.d-bos{background:#fff3e8}
+tr.d-hazir{background:#eef9f1} tr.d-konaklamali{background:#f0f4f7} tr.d-cikis,tr.d-bos{background:#fff3e8} tr.d-arizali{background:#fbe5e5}
 .cell.occ{border-left-color:#6f838c;background:#eef2f4}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin:-4px 0 10px}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
@@ -286,7 +286,8 @@ function viewPlan() {
     for (let i = 1; i <= 6; i++) {
       const no = String(f * 100 + i), r = state.rooms[no], d = DEFS[no], lk = locked(no) || r.kd;
       cnt[r.durum === 'hazir' ? 'hazir' : r.durum === 'konaklamali' ? 'dolu' : r.durum === 'belirsiz' ? 'belirsiz' : 'kirli']++;
-      rows += `<tr class="d-${r.durum}"><td><b>${no}</b></td><td>${d.tip}</td>
+      const arizali = state.issues.some(x => x.oda === no && x.status < 2);
+      rows += `<tr class="d-${r.durum}${arizali ? ' d-arizali' : ''}"><td><b>${no}</b>${arizali ? ' <span class="tag hot">Arızalı</span>' : ''}</td><td>${d.tip}</td>
         <td><select data-act="rdurum" data-room="${no}" ${lk ? 'disabled' : ''} aria-label="${no} durumu">
           ${Object.entries(DURUM_ANA).map(([k, v]) => `<option value="${k}" ${r.durum === k ? 'selected' : ''}>${v}</option>`).join('')}</select></td>
         <td><input type="time" data-act="rgiris" data-room="${no}" value="${r.giris}" ${lk ? 'disabled' : ''} aria-label="${no} misafir giriş saati"></td>
@@ -322,6 +323,7 @@ function viewPlan() {
 /* --- Bugün (resepsiyon) --- */
 function roomCat(no) {
   const r = state.rooms[no], d = DEFS[no];
+  if (state.issues.some(i => i.oda === no && i.status < 2)) return 'arizali';
   if (r.kd) return 'kd';
   const t = state.tasks.filter(x => x.oda === no).slice(-1)[0];
   if (t && t.status === 2) return 'kontrol';
@@ -334,6 +336,7 @@ function cellInfo(no) {
   const t = state.tasks.filter(x => x.oda === no).slice(-1)[0];
   const who = t && t.status === 1 && t.baslayan ? ' · ' + esc(t.baslayan) : t && t.status === 2 && t.bitiren ? ' · ' + esc(t.bitiren) : '';
   const base = d.bina === 'ek' ? 'Dolu' : 'Konaklamalı';
+  if (cat === 'arizali') return ['arizali', r.kd ? 'Arızalı · kullanım dışı' : 'Arızalı'];
   if (cat === 'kd') return ['kd', 'Kullanım dışı'];
   if (cat === 'kontrol') return ['c2', 'Temiz, kontrol bekliyor' + who];
   if (cat === 'kirli') return t ? (t.status === 1 ? ['c1', 'Temizleniyor' + who] : ['c0', 'Kirli, sırada']) : ['c0', 'Kirli, görev gönderilmedi'];
@@ -348,7 +351,7 @@ function cellInfo(no) {
 }
 function viewToday() {
   const nums = Object.keys(DEFS);
-  const n = { hazir: 0, dolu: 0, kirli: 0, kontrol: 0, kd: 0, belirsiz: 0 };
+  const n = { hazir: 0, dolu: 0, kirli: 0, kontrol: 0, kd: 0, arizali: 0, belirsiz: 0 };
   nums.forEach(no => n[roomCat(no)]++);
   const cells = nums.map(no => {
     const [cls, txt] = cellInfo(no), d = DEFS[no];
@@ -360,7 +363,7 @@ function viewToday() {
   const team = `<p style="margin:4px 0">${nowRooms.length ? 'Şu an temizlenen odalar: ' + nowRooms.join(', ') : 'Şu an temizlenen oda yok.'} Bugün ${state.tasks.filter(t => t.status >= 2).length} oda temizlendi.</p>`;
   return `
     <div class="sum"><div><b>${n.hazir}</b>Temiz ve hazır</div><div><b>${n.dolu}</b>Konaklamalı / dolu</div><div><b>${n.kirli}</b>Kirli</div><div><b>${n.kontrol}</b>Kontrol bekliyor</div></div>
-    ${n.kd || n.belirsiz ? `<p class="note">${n.kd ? n.kd + ' oda kullanım dışı. ' : ''}${n.belirsiz ? n.belirsiz + ' odanın durumu henüz seçilmedi.' : ''}</p>` : ''}
+    ${n.kd || n.arizali || n.belirsiz ? `<p class="note">${n.arizali ? n.arizali + ' odada açık arıza var. ' : ''}${n.kd ? n.kd + ' oda kullanım dışı. ' : ''}${n.belirsiz ? n.belirsiz + ' odanın durumu henüz seçilmedi.' : ''}</p>` : ''}
     <div class="panel"><h2>Kat görevlileri</h2>${team}</div>
     ${(() => { const op = state.issues.filter(i => i.status < 2).sort((a, b) => (a.onem === 'kritik' ? 0 : 1) - (b.onem === 'kritik' ? 0 : 1) || a.t - b.t);
       return op.length ? `<div class="panel"><h2>Açık arızalar (${op.length})</h2>${op.map(i => `<div class="task t${i.status}" ${i.onem === 'kritik' ? 'style="border-left-color:var(--bad)"' : ''}>
