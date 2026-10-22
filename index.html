@@ -92,8 +92,6 @@ tr.d-hazir{background:#eef9f1} tr.d-konaklamali{background:#f0f4f7} tr.d-cikis,t
 @media (max-width:640px){.sum{grid-template-columns:repeat(2,1fr)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 </head>
 <body>
 <div id="root"></div>
@@ -107,14 +105,6 @@ tr.d-hazir{background:#eef9f1} tr.d-konaklamali{background:#f0f4f7} tr.d-cikis,t
    Veriler tarayıcıda (localStorage) saklanır. Gerçek sürümde
    load()/save()/log() Supabase çağrılarıyla değiştirilecek.
    ========================================================= */
-
-const SUPABASE_URL = 'https://xcrpvucjgpjmlwqibjwu.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_F4vBWe6luYKgQ4dpla_hQQ_Nmcojh_J';
-
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY
-);
 
 const KEY = 'kh-demo-v11';
 const ANNEX = ['113','211','212','213','311','312','313','411','412','413'];
@@ -271,7 +261,7 @@ function viewLogin() {
       <p class="note" id="loginErr" style="color:var(--bad);margin:0"></p>
     </form>
     <p class="note"><b>Demo sürümü.</b> Hesaplar: yonetici, resepsiyon, kat, teknik. Hepsinin şifresi 1234. Gerçek sürümde hesapları yönetici açacak ve şifreler sunucuda korunacak.</p>
-    <p class="note">İpucu: iki sekme açıp farklı kullanıcılarla girerseniz anlık uyarıları ve sesleri deneyebilirsiniz.</p>
+    <p class="note">İpucu: aynı tarayıcıda iki sekme açıp farklı kullanıcılarla girerseniz anlık uyarıları ve sesleri deneyebilirsiniz. Bu demo sürümü farklı cihazlar arasında veri eşitlemez.</p>
   </div>`;
 }
 
@@ -402,7 +392,7 @@ function viewMine() {
     <div class="panel"><label>Adınız (yaptığınız işlemlerde bu isim görünür)
       <input id="myName" data-act="myname" value="${esc(myName)}" maxlength="30" placeholder="Örn. Ayşe" autocomplete="given-name"></label></div>
     <div class="sum"><div><b>${pool.length}</b>Bekleyen oda</div><div><b>${doing.length}</b>Temizleniyor</div><div><b>${toCheck.length}</b>Kontrol bekliyor</div><div><b>${done.length}</b>Kontrol edildi</div></div>
-    <p class="note">Bu ekran iki görevli için ortaktır, ikinizin telefonunda da aynı liste görünür. Bir odaya “Başla” dediğinizde oda “Temizleniyor” bölümüne geçer. Temizlediğiniz odayı yönetici kontrol eder, kontrol edilince oda “Temiz ve hazır” olur.</p>
+    <p class="note">Bu demo sürümünde liste aynı tarayıcıdaki sekmeler arasında eşitlenir; farklı telefonlar arasında eşitleme henüz yoktur. Bir odaya “Başla” dediğinizde oda “Temizleniyor” bölümüne geçer. Temizlediğiniz odayı yönetici kontrol eder, kontrol edilince oda “Temiz ve hazır” olur.</p>
     ${doing.length ? `<h2>Temizleniyor</h2>${doing.map(t => card(t)).join('')}` : ''}
     <h2 style="margin-top:12px">Ortak liste</h2>
     ${pool.length ? pool.map((t, i) => card(t, i === 0)).join('') : `<div class="empty">${T.length ? 'Bekleyen oda kalmadı.' : 'Henüz oda yok. Resepsiyon odaları gönderdiğinde burada görünür.'}</div>`}
@@ -598,7 +588,7 @@ function render() {
       <b>${dayLabel(iso(Date.now()))}</b><span id="clock">${hhmm(Date.now())}</span>
       ${isRecep ? '<button class="btn small ghost" data-act="newday">Günü kapat</button>' : ''}
     </div></div>
-    <div class="demo"><div class="wrap">Demo sürümü: veriler yalnızca bu tarayıcıda saklanır.</div></div>
+    <div class="demo"><div class="wrap">Demo sürümü: veriler yalnızca bu tarayıcıda saklanır; farklı cihazlar arasında eşitleme ve gerçek kullanıcı doğrulaması henüz yoktur.</div></div>
     <nav><div class="wrap" role="tablist">${tabs.map(([k, n]) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${k === tab}">${n}${k === 'plan' && unsent ? `<span class="badge">${unsent}</span>` : ''}${k === 'ariza' && openIssues ? `<span class="badge">${openIssues}</span>` : ''}${k === 'bugun' && me.rol === 'yonetici' && state.tasks.some(t => t.status === 2) ? `<span class="badge">${state.tasks.filter(t => t.status === 2).length}</span>` : ''}</button>`).join('')}</div></nav>
     <main>${views[tab]()}</main>`;
 }
