@@ -1,226 +1,59 @@
 <!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#17324d">
-  <title>Kat Hizmetleri Yönetim Sistemi</title>
-  <style>
-    :root{font-family:Arial,Helvetica,sans-serif;color:#1f2937;background:#f3f6f9;font-synthesis:none}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh}
-    header{background:#17324d;color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    header h1{font-size:20px;margin:0}header p{margin:5px 0 0;color:#d5e2ee;font-size:13px}
-    main{max-width:1050px;margin:32px auto;padding:0 18px}
-    .panel{background:#fff;border:1px solid #e0e7ee;border-radius:14px;padding:24px;box-shadow:0 4px 18px #19324a0a}
-    .login{max-width:430px;margin:7vh auto}.muted{color:#64748b;font-size:14px;line-height:1.5}
-    label{display:block;font-size:14px;font-weight:600;margin:16px 0 7px}
-    input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
-    button{border:0;border-radius:8px;padding:11px 15px;background:#1769aa;color:#fff;font:inherit;font-weight:600;cursor:pointer}
-    button:disabled{opacity:.6;cursor:wait}.secondary{background:#e8eef4;color:#17324d}
-    .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px}
-    .message{font-size:14px;margin-top:14px;line-height:1.5}.error{color:#b42318}.success{color:#067647}
-    .topline{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
-    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
-    .stat{padding:16px;background:#f7f9fb;border:1px solid #e4eaf0;border-radius:10px}.stat span{display:block;color:#64748b;font-size:13px}.stat strong{display:block;font-size:26px;margin-top:7px}
-    .table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:12px;border-bottom:1px solid #e5eaf0;white-space:nowrap}th{background:#f7f9fb;color:#475569}
-    .hidden{display:none!important}.badge{display:inline-block;padding:4px 8px;background:#e8eef4;color:#17324d;border-radius:20px;font-size:12px}
-    footer{text-align:center;padding:24px;color:#64748b;font-size:12px}
-    @media(max-width:600px){header{padding:16px}header h1{font-size:17px}.panel{padding:18px}main{margin:20px auto}}
-  </style>
-</head>
-<body>
-  <header>
-    <div><h1>Kat Hizmetleri Yönetim Sistemi</h1><p>Oda ve operasyon yönetimi</p></div>
-    <button id="logoutButton" class="secondary hidden" type="button">Güvenli çıkış</button>
-  </header>
-
-  <main>
-    <section id="loginView" class="panel login">
-      <h2>Giriş yap</h2>
-      <p class="muted">İşletme yöneticinizin sizin için oluşturduğu kullanıcı hesabıyla giriş yapın.</p>
-      <form id="loginForm">
-        <label for="email">E-posta</label>
-        <input id="email" type="email" autocomplete="username" required>
-        <label for="password">Şifre</label>
-        <input id="password" type="password" autocomplete="current-password" required>
-        <div class="actions"><button id="loginButton" type="submit">Giriş yap</button></div>
-        <div id="loginMessage" class="message" role="status" aria-live="polite"></div>
-      </form>
-    </section>
-
-    <section id="appView" class="hidden">
-      <div class="panel">
-        <div class="topline">
-          <div><h2 id="welcomeTitle">Yönetim ekranı</h2><p id="profileInfo" class="muted"></p></div>
-          <span id="roleBadge" class="badge"></span>
-        </div>
-        <div id="appMessage" class="message" role="status" aria-live="polite"></div>
-        <div class="stats">
-          <div class="stat"><span>Toplam oda</span><strong id="roomCount">—</strong></div>
-          <div class="stat"><span>Standart oda</span><strong id="standardCount">—</strong></div>
-          <div class="stat"><span>Süit oda</span><strong id="suiteCount">—</strong></div>
-        </div>
-      </div>
-      <div class="panel" style="margin-top:18px">
-        <h2>Oda listesi</h2>
-        <p class="muted">Oda bilgileri veritabanından okunur.</p>
-        <div class="table-wrap"><table><thead><tr><th>Oda</th><th>Bina</th><th>Oda tipi</th></tr></thead><tbody id="roomsBody"><tr><td colspan="3">Odalar yükleniyor…</td></tr></tbody></table></div>
-      </div>
-    </section>
-  </main>
-  <footer>Kat Hizmetleri Yönetim Sistemi</footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script>
-    'use strict';
-
-    // Tarayıcıda kullanılabilecek Supabase publishable key.
-    // Service role / secret key bu dosyaya kesinlikle eklenmemelidir.
-    const SUPABASE_URL = 'https://xmbnjkphoxgxpocwhqyz.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_aca-LlYGaK_XNatU8ipdzQ_QSu60h0a';
-
-    const loginView = document.getElementById('loginView');
-    const appView = document.getElementById('appView');
-    const loginForm = document.getElementById('loginForm');
-    const loginButton = document.getElementById('loginButton');
-    const loginMessage = document.getElementById('loginMessage');
-    const appMessage = document.getElementById('appMessage');
-    const logoutButton = document.getElementById('logoutButton');
-    const roomsBody = document.getElementById('roomsBody');
-    let supabaseClient = null;
-
-    function showMessage(element, message, kind) {
-      element.textContent = message || '';
-      element.className = 'message' + (kind ? ' ' + kind : '');
-    }
-
-    function showLogin(message = '') {
-      loginView.classList.remove('hidden');
-      appView.classList.add('hidden');
-      logoutButton.classList.add('hidden');
-      showMessage(loginMessage, message, message ? 'error' : '');
-    }
-
-    function showApp() {
-      loginView.classList.add('hidden');
-      appView.classList.remove('hidden');
-      logoutButton.classList.remove('hidden');
-    }
-
-    function displayRoomType(room) {
-      return room.room_type || room.type || room.category || 'Belirtilmemiş';
-    }
-
-    async function loadRooms() {
-      roomsBody.innerHTML = '<tr><td colspan="3">Odalar yükleniyor…</td></tr>';
-      const { data, error } = await supabaseClient.from('rooms').select('*').order('room_number');
-      if (error) {
-        roomsBody.innerHTML = '<tr><td colspan="3">Oda listesi alınamadı.</td></tr>';
-        showMessage(appMessage, 'Oda verileri okunamadı. Supabase rooms tablosu ve RLS izinleri kontrol edilmeli. (' + error.message + ')', 'error');
-        return;
-      }
-      const rooms = data || [];
-      document.getElementById('roomCount').textContent = rooms.length;
-      document.getElementById('standardCount').textContent = rooms.filter(r => /standart|standard/i.test(displayRoomType(r))).length;
-      document.getElementById('suiteCount').textContent = rooms.filter(r => /suit|suite/i.test(displayRoomType(r))).length;
-      roomsBody.replaceChildren();
-      if (!rooms.length) {
-        roomsBody.innerHTML = '<tr><td colspan="3">Henüz oda kaydı bulunmuyor.</td></tr>';
-        return;
-      }
-      for (const room of rooms) {
-        const tr = document.createElement('tr');
-        const numberCell = document.createElement('td');
-        const buildingCell = document.createElement('td');
-        const typeCell = document.createElement('td');
-        numberCell.textContent = room.room_number ?? room.number ?? room.name ?? '—';
-        buildingCell.textContent = room.building || room.building_name || '—';
-        typeCell.textContent = displayRoomType(room);
-        tr.append(numberCell, buildingCell, typeCell);
-        roomsBody.appendChild(tr);
-      }
-      showMessage(appMessage, 'Oda listesi veritabanından yüklendi.', 'success');
-    }
-
-    async function openUserSession(session) {
-      if (!session || !session.user) {
-        showLogin();
-        return;
-      }
-      const { data: profile, error } = await supabaseClient
-        .from('profiles')
-        .select('full_name, role, is_active')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (error || !profile) {
-        await supabaseClient.auth.signOut();
-        showLogin('Kullanıcı profili bulunamadı. Yönetici, Supabase profiles tablosunu kontrol etmeli.');
-        return;
-      }
-      if (profile.is_active === false) {
-        await supabaseClient.auth.signOut();
-        showLogin('Bu kullanıcı hesabı devre dışı bırakılmış.');
-        return;
-      }
-      showApp();
-      document.getElementById('welcomeTitle').textContent = 'Hoş geldiniz, ' + (profile.full_name || session.user.email);
-      document.getElementById('profileInfo').textContent = session.user.email || '';
-      const roleNames = { yonetici: 'Yönetici', resepsiyon: 'Resepsiyon', kat: 'Kat görevlisi', teknik: 'Teknik personel' };
-      document.getElementById('roleBadge').textContent = roleNames[profile.role] || profile.role || 'Personel';
-      await loadRooms();
-    }
-
-    loginForm.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      if (!supabaseClient) {
-        showMessage(loginMessage, 'Supabase bağlantısı kurulamadı. İnternet bağlantısını ve CDN erişimini kontrol edin.', 'error');
-        return;
-      }
-      loginButton.disabled = true;
-      showMessage(loginMessage, 'Giriş kontrol ediliyor…');
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      loginButton.disabled = false;
-      if (error) {
-        showMessage(loginMessage, 'Giriş yapılamadı. E-posta ve şifreyi kontrol edin.', 'error');
-        return;
-      }
-      await openUserSession(data.session);
-    });
-
-    logoutButton.addEventListener('click', async () => {
-      if (!supabaseClient) return;
-      const { error } = await supabaseClient.auth.signOut();
-      if (error) {
-        showMessage(appMessage, 'Çıkış yapılamadı: ' + error.message, 'error');
-        return;
-      }
-      loginForm.reset();
-      showLogin('Güvenli çıkış yapıldı.');
-    });
-
-    async function startApp() {
-      if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-        showLogin('Supabase kütüphanesi yüklenemedi. İnternet bağlantısını kontrol edin.');
-        return;
-      }
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-      const { data, error } = await supabaseClient.auth.getSession();
-      if (error) {
-        showLogin('Oturum kontrol edilemedi. Sayfayı yenileyip tekrar deneyin.');
-        return;
-      }
-      await openUserSession(data.session);
-      supabaseClient.auth.onAuthStateChange((_event, session) => {
-        if (!session) showLogin();
-      });
-    }
-
-    startApp();
-  </script>
-</body>
-</html>
-
-<!-- CNSZR: temiz başlangıç sürümü 2026-10-22 -->
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17324d"><title>Kat Hizmetleri Yönetim Sistemi</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#1f2937;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{border:0;border-radius:8px;padding:10px 14px;background:#1769aa;color:white;font-weight:600;cursor:pointer}button:disabled{opacity:.5}.secondary{background:#e8eef4;color:#17324d}header{background:#17324d;color:white;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:20px;margin:0}header p{margin:4px 0 0;color:#d5e2ee;font-size:13px}.layout{display:grid;grid-template-columns:205px 1fr;min-height:calc(100vh - 68px)}nav{background:white;border-right:1px solid #e1e7ee;padding:12px}nav button{display:block;width:100%;text-align:left;margin:4px 0;background:transparent;color:#334155}nav button.active{background:#eaf2f9;color:#14588b}main{padding:22px;max-width:1450px;width:100%;margin:auto}.view{display:none}.view.active{display:block}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}h2{margin:0;font-size:23px}.muted{color:#64748b;font-size:14px;line-height:1.5}.panel,.stat{background:white;border:1px solid #e0e7ee;border-radius:12px;padding:17px;box-shadow:0 3px 12px #1e293b08}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.stat span{display:block;color:#64748b;font-size:13px}.stat strong{display:block;font-size:28px;margin-top:6px}.section{margin-top:16px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:10px;border-bottom:1px solid #e8edf2;vertical-align:top}th{background:#f7f9fb;color:#475569;font-size:12px}.table-wrap{overflow:auto;border:1px solid #e5eaf0;border-radius:9px}.pill{display:inline-block;border-radius:99px;padding:4px 8px;background:#e8eef4;font-size:12px;white-space:nowrap}.green{background:#dcfce7;color:#166534}.amber{background:#fef3c7;color:#92400e}.red{background:#fee2e2;color:#991b1b}.blue{background:#dbeafe;color:#1d4ed8}label{display:block;font-size:13px;font-weight:650;margin:12px 0 6px}input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;background:white}textarea{min-height:75px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}.span2{grid-column:1/-1}.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}.toolbar input,.toolbar select{width:auto;min-width:170px}.roomgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}.room{background:white;border:1px solid #dbe3eb;border-left:4px solid #94a3b8;border-radius:10px;padding:12px}.room.clean{border-left-color:#16a34a}.room.wait{border-left-color:#f59e0b}.room.bad{border-left-color:#dc2626}.room small{display:block;color:#64748b;margin:5px 0}.room select{margin-top:8px;padding:7px;font-size:13px}.message{display:none;padding:10px;border-radius:8px;font-size:14px;margin:12px 0;white-space:pre-wrap}.message.show{display:block}.error{background:#fee2e2;color:#991b1b}.success{background:#dcfce7;color:#166534}.hidden{display:none!important}.empty{text-align:center;padding:22px;color:#64748b}.login{max-width:430px;margin:8vh auto;padding:26px;background:white;border:1px solid #e0e7ee;border-radius:15px}.login h2{margin:12px 0}.login .brand{font-size:24px;font-weight:750;color:#17324d}@media(max-width:720px){.layout{grid-template-columns:1fr}nav{display:flex;overflow:auto;border-right:0;border-bottom:1px solid #ddd;padding:7px}nav button{width:auto;white-space:nowrap}.formgrid{grid-template-columns:1fr}.span2{grid-column:auto}main{padding:14px}header{padding:14px}h1{font-size:17px}}
+</style></head><body>
+<header><div><h1>Kat Hizmetleri Yönetim Sistemi</h1><p>Oda operasyonları · Görevler · Arıza takibi · Raporlar</p></div><div><span id="userLabel" style="font-size:13px;margin-right:8px"></span><button id="logout" class="secondary hidden">Çıkış yap</button></div></header>
+<section id="loginScreen" class="login"><div class="brand">Kat Hizmetleri</div><h2>Güvenli giriş</h2><p class="muted">İşletme yöneticinizin tanımladığı kullanıcı hesabıyla giriş yapın.</p><form id="loginForm"><label for="email">E-posta</label><input id="email" type="email" autocomplete="username" required><label for="password">Şifre</label><input id="password" type="password" autocomplete="current-password" required><div class="actions"><button id="loginBtn">Giriş yap</button></div><div id="loginMsg" class="message" role="status"></div></form></section>
+<div id="shell" class="layout hidden"><nav id="nav"><button class="active" data-view="dashboard">Genel bakış</button><button data-view="rooms">Odalar</button><button data-view="tasks">Görevler</button><button data-view="issues">Arıza kayıtları</button><button data-view="reports">Raporlar</button><button data-view="staff">Personel</button></nav><main><div id="msg" class="message" role="status"></div>
+<section id="v-dashboard" class="view active"><div class="head"><div><h2>Genel bakış</h2><p class="muted">Güncel operasyon durumu</p></div><button id="refresh" class="secondary">Yenile</button></div><div class="grid"><div class="stat"><span>Toplam oda</span><strong id="nRooms">—</strong></div><div class="stat"><span>Temizlik bekleyen</span><strong id="nPending">—</strong></div><div class="stat"><span>Açık görev</span><strong id="nTasks">—</strong></div><div class="stat"><span>Açık arıza</span><strong id="nIssues">—</strong></div></div><div class="panel section"><h3>Öncelikli arızalar</h3><div id="dashIssues"></div></div><div class="panel section"><h3>Son görevler</h3><div id="dashTasks"></div></div></section>
+<section id="v-rooms" class="view"><div class="head"><div><h2>Odalar</h2><p class="muted">Oda durumlarını izleyin ve güncelleyin.</p></div><button id="showRoom">Oda ekle</button></div><div class="toolbar"><input id="roomSearch" placeholder="Oda numarası ara"><select id="roomFilter"><option value="">Tüm durumlar</option><option>Temiz</option><option>Temizlik bekliyor</option><option>Temizlikte</option><option>Kontrol bekliyor</option><option>Arızalı</option></select></div><div id="roomGrid" class="roomgrid"></div><div id="roomFormBox" class="panel section hidden"><h3>Yeni oda</h3><form id="roomForm"><div class="formgrid"><div><label>Oda numarası</label><input id="roomNo" required></div><div><label>Bina</label><input id="building" placeholder="Ana bina / Ek bina"></div><div><label>Oda tipi</label><select id="roomType"><option>Standart</option><option>Süit</option><option>Apart</option><option>Tek kişilik</option></select></div><div><label>Başlangıç durumu</label><select id="roomInitial"><option>Temizlik bekliyor</option><option>Temiz</option><option>Temizlikte</option><option>Kontrol bekliyor</option><option>Arızalı</option></select></div></div><div class="actions"><button type="button" id="cancelRoom" class="secondary">Vazgeç</button><button>Kaydet</button></div></form></div></section>
+<section id="v-tasks" class="view"><div class="head"><div><h2>Görevler</h2><p class="muted">Temizlik ve kontrol görevlerini yönetin.</p></div><button id="showTask">Görev oluştur</button></div><div class="toolbar"><select id="taskFilter"><option value="">Tüm görevler</option><option>Bekliyor</option><option>Devam ediyor</option><option>Tamamlandı</option><option>İptal</option></select></div><div id="taskTable" class="panel"></div><div id="taskFormBox" class="panel section hidden"><h3>Yeni görev</h3><form id="taskForm"><div class="formgrid"><div><label>Oda</label><select id="taskRoom" required></select></div><div><label>Görev türü</label><select id="taskType"><option>Temizlik</option><option>Kontrol</option><option>Minibar</option><option>Diğer</option></select></div><div><label>Atanan personel</label><select id="taskAssignee"><option value="">Atanmamış</option></select></div><div><label>Öncelik</label><select id="taskPriority"><option>Normal</option><option>Yüksek</option><option>Acil</option></select></div><div class="span2"><label>Not</label><textarea id="taskNotes"></textarea></div></div><div class="actions"><button type="button" id="cancelTask" class="secondary">Vazgeç</button><button>Görevi kaydet</button></div></form></div></section>
+<section id="v-issues" class="view"><div class="head"><div><h2>Arıza kayıtları</h2><p class="muted">Teknik sorunları kaydedin ve takip edin.</p></div><button id="showIssue">Arıza bildir</button></div><div class="toolbar"><select id="issueFilter"><option value="">Tüm kayıtlar</option><option>Açık</option><option>İşlemde</option><option>Çözüldü</option></select></div><div id="issueTable" class="panel"></div><div id="issueFormBox" class="panel section hidden"><h3>Arıza bildirimi</h3><form id="issueForm"><div class="formgrid"><div><label>Oda</label><select id="issueRoom" required></select></div><div><label>Öncelik</label><select id="issuePriority"><option>Normal</option><option>Yüksek</option><option>Acil</option></select></div><div class="span2"><label>Açıklama</label><textarea id="issueDesc" required></textarea></div><div><label>Atanan teknik personel</label><select id="issueAssignee"><option value="">Atanmamış</option></select></div></div><div class="actions"><button type="button" id="cancelIssue" class="secondary">Vazgeç</button><button>Kaydı oluştur</button></div></form></div></section>
+<section id="v-reports" class="view"><div class="head"><div><h2>Raporlar</h2><p class="muted">Oda ve görev durumlarının özeti</p></div><button id="export" class="secondary">Oda raporunu CSV indir</button></div><div class="grid"><div class="stat"><span>Temiz oda</span><strong id="rClean">—</strong></div><div class="stat"><span>Temizlik bekleyen</span><strong id="rPending">—</strong></div><div class="stat"><span>Tamamlanan görev</span><strong id="rDone">—</strong></div><div class="stat"><span>Çözülen arıza</span><strong id="rFixed">—</strong></div></div><div class="panel section"><h3>Oda durum dağılımı</h3><div id="distribution"></div></div></section>
+<section id="v-staff" class="view"><div class="head"><div><h2>Personel</h2><p class="muted">Sistemde tanımlı kullanıcılar ve rolleri.</p></div><button id="refreshStaff" class="secondary">Yenile</button></div><p class="muted">Güvenlik nedeniyle kullanıcı hesabı ve şifre oluşturma işlemi uygulamanın tarayıcı kodundan yapılmaz; Supabase yönetiminden yapılmalıdır.</p><div id="staffTable" class="panel"></div></section>
+</main></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+'use strict';
+const URL_DB='https://xmbnjkphoxgxpocwhqyz.supabase.co',KEY='sb_publishable_aca-LlYGaK_XNatU8ipdzQ_QSu60h0a';
+const $=id=>document.getElementById(id);let db,session,profile,rooms=[],tasks=[],issues=[],staff=[];
+const roleNames={yonetici:'Yönetici',resepsiyon:'Resepsiyon',kat:'Kat görevlisi',teknik:'Teknik personel'};
+const get=(o,...ks)=>{for(const k of ks)if(o?.[k]!==undefined&&o[k]!==null)return o[k];return ''};
+const roomNo=r=>get(r,'room_number','number','name')||'—';
+const roomType=r=>get(r,'room_type','type','category')||'Belirtilmemiş';
+const norm=s=>({'clean':'Temiz','dirty':'Temizlik bekliyor','pending':'Bekliyor','in_progress':'Devam ediyor','completed':'Tamamlandı','open':'Açık','resolved':'Çözüldü','closed':'Çözüldü'}[String(s||'').toLowerCase()]||s||'Belirtilmemiş');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const date=s=>s?new Date(s).toLocaleString('tr-TR',{dateStyle:'short',timeStyle:'short'}):'—';
+function message(el,s,type=''){el.textContent=s||'';el.className='message'+(s?' show':'')+(type?' '+type:'')}
+function note(s,type='success'){message($('msg'),s,type);window.scrollTo({top:0,behavior:'smooth'})}
+function pill(s){s=norm(s);let c=/temiz$|tamamlandı|çözüldü/i.test(s)?'green':/acil|arıza|açık/i.test(s)?'red':/bekliyor|yüksek/i.test(s)?'amber':'blue';return '<span class="pill '+c+'">'+esc(s)+'</span>'}
+function table(head,rows,empty='Kayıt bulunamadı.'){return rows.length?'<div class="table-wrap"><table><thead><tr>'+head.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>':'<div class="empty">'+empty+'</div>'}
+function person(id){let p=staff.find(x=>String(x.id)===String(id));return p?.full_name||p?.email||'Atanmamış'}
+function hideForms(){['roomFormBox','taskFormBox','issueFormBox'].forEach(id=>$(id).classList.add('hidden'))}
+function view(n){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+n));document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===n));hideForms()}
+function showLogin(s=''){session=null;profile=null;$('shell').classList.add('hidden');$('loginScreen').classList.remove('hidden');$('logout').classList.add('hidden');$('userLabel').textContent='';message($('loginMsg'),s,s?'error':'')}
+async function read(tableName,columns='*',order='created_at'){let q=db.from(tableName).select(columns);if(order)q=q.order(order,{ascending:true});let {data,error}=await q;if(error)throw Error(tableName+' tablosu: '+error.message);return data||[]}
+function options(id,list,label,value,first){let e=$(id),old=e.value;e.innerHTML=(first!==null?'<option value="">'+esc(first)+'</option>':'')+list.map(x=>'<option value="'+esc(value(x))+'">'+esc(label(x))+'</option>').join('');if(list.some(x=>String(value(x))===old))e.value=old}
+function fill(){options('taskRoom',rooms,r=>roomNo(r)+' · '+roomType(r),r=>r.id,null);options('issueRoom',rooms,r=>roomNo(r)+' · '+roomType(r),r=>r.id,null);let active=staff.filter(x=>x.is_active!==false);options('taskAssignee',active,x=>x.full_name||x.email,x=>x.id,'Atanmamış');options('issueAssignee',active.filter(x=>['teknik','yonetici'].includes(x.role)),x=>x.full_name||x.email,x=>x.id,'Atanmamış')}
+async function load(){try{[rooms,tasks,issues,staff]=await Promise.all([read('rooms','*','room_number'),read('tasks','*','created_at'),read('issues','*','created_at'),read('profiles','id,full_name,role,is_active,email','full_name')]);tasks.reverse();issues.reverse();fill();render();message($('msg'),'')}catch(e){note('Veriler yüklenemedi: '+e.message+' Tablo sütunları ve RLS izinleri kontrol edilmeli.','error')}}
+function render(){renderDash();renderRooms();renderTasks();renderIssues();renderReports();renderStaff()}
+function renderDash(){$('nRooms').textContent=rooms.length;$('nPending').textContent=rooms.filter(r=>/bekliyor|temizlikte|kontrol/i.test(norm(get(r,'status','room_status')))).length;$('nTasks').textContent=tasks.filter(t=>!/tamamlandı|completed|iptal/i.test(norm(get(t,'status')))).length;$('nIssues').textContent=issues.filter(i=>!/çözüldü|resolved|closed/i.test(norm(get(i,'status')))).length;
+$('dashIssues').innerHTML=table(['Oda','Açıklama','Öncelik','Durum'],issues.filter(i=>!/çözüldü|resolved|closed/i.test(norm(get(i,'status')))).slice(0,6).map(i=>'<tr><td>'+esc(roomNo(rooms.find(r=>String(r.id)===String(i.room_id))||{room_number:get(i,'room_number')}))+'</td><td>'+esc(get(i,'description','title'))+'</td><td>'+pill(get(i,'priority')||'Normal')+'</td><td>'+pill(get(i,'status')||'Açık')+'</td></tr>'),'Açık arıza kaydı yok.');
+$('dashTasks').innerHTML=table(['Oda','Görev','Atanan','Durum'],tasks.slice(0,6).map(t=>'<tr><td>'+esc(roomNo(rooms.find(r=>String(r.id)===String(t.room_id))||{room_number:get(t,'room_number')}))+'</td><td>'+esc(get(t,'task_type','title','type')||'Görev')+'</td><td>'+esc(person(get(t,'assigned_to','assigned_user_id')) )+'</td><td>'+pill(t.status||'Bekliyor')+'</td></tr>'),'Görev kaydı yok.')}
+function renderRooms(){let q=$('roomSearch').value.toLowerCase(),f=$('roomFilter').value;let list=rooms.filter(r=>String(roomNo(r)).toLowerCase().includes(q)&&(!f||norm(get(r,'status','room_status')||'Temizlik bekliyor')===f));$('roomGrid').innerHTML=list.length?list.map(r=>{let st=norm(get(r,'status','room_status')||'Temizlik bekliyor');return '<article class="room '+(/temiz$/i.test(st)?'clean':/arıza/i.test(st)?'bad':/bekliyor|temizlikte/i.test(st)?'wait':'')+'"><strong>'+esc(roomNo(r))+'</strong><small>'+esc(get(r,'building','building_name')||'Bina belirtilmemiş')+' · '+esc(roomType(r))+'</small>'+pill(st)+'<label>Durumu</label><select data-room="'+esc(r.id)+'">'+['Temiz','Temizlik bekliyor','Temizlikte','Kontrol bekliyor','Arızalı'].map(x=>'<option '+(x===st?'selected':'')+'>'+x+'</option>').join('')+'</select></article>'}).join(''):'<div class="empty">Oda bulunamadı.</div>';document.querySelectorAll('[data-room]').forEach(e=>e.onchange=()=>update('rooms',e.dataset.room,{status:e.value},'Oda durumu güncellendi.'))}
+function renderTasks(){let f=$('taskFilter').value,list=tasks.filter(t=>!f||norm(t.status)===f);$('taskTable').innerHTML=table(['Oda','Görev / Not','Atanan','Öncelik','Tarih','Durum'],list.map(t=>'<tr><td>'+esc(roomNo(rooms.find(r=>String(r.id)===String(t.room_id))||{room_number:get(t,'room_number')}))+'</td><td>'+esc(get(t,'task_type','title','type')||'Görev')+'<div class="muted">'+esc(get(t,'notes','description'))+'</div></td><td>'+esc(person(get(t,'assigned_to','assigned_user_id')) )+'</td><td>'+pill(t.priority||'Normal')+'</td><td>'+esc(date(t.created_at))+'</td><td><select data-task="'+esc(t.id)+'">'+['Bekliyor','Devam ediyor','Tamamlandı','İptal'].map(x=>'<option '+(norm(t.status)===x?'selected':'')+'>'+x+'</option>').join('')+'</select></td></tr>'),'Görev oluşturulmadı.');document.querySelectorAll('[data-task]').forEach(e=>e.onchange=()=>update('tasks',e.dataset.task,{status:e.value},'Görev güncellendi.'))}
+function renderIssues(){let f=$('issueFilter').value,list=issues.filter(i=>!f||norm(i.status)===f);$('issueTable').innerHTML=table(['Oda','Açıklama','Öncelik','Atanan','Tarih','Durum'],list.map(i=>'<tr><td>'+esc(roomNo(rooms.find(r=>String(r.id)===String(i.room_id))||{room_number:get(i,'room_number')}))+'</td><td>'+esc(get(i,'description','title'))+'</td><td>'+pill(i.priority||'Normal')+'</td><td>'+esc(person(get(i,'assigned_to','assigned_user_id')) )+'</td><td>'+esc(date(i.created_at))+'</td><td><select data-issue="'+esc(i.id)+'">'+['Açık','İşlemde','Çözüldü'].map(x=>'<option '+(norm(i.status)===x?'selected':'')+'>'+x+'</option>').join('')+'</select></td></tr>'),'Arıza kaydı yok.');document.querySelectorAll('[data-issue]').forEach(e=>e.onchange=()=>update('issues',e.dataset.issue,{status:e.value},'Arıza durumu güncellendi.'))}
+async function update(t,id,values,msg){try{let {error}=await db.from(t).update(values).eq('id',id);if(error)throw error;await load();note(msg)}catch(e){note('Kaydedilemedi: '+e.message,'error')}}
+function renderReports(){$('rClean').textContent=rooms.filter(r=>norm(get(r,'status'))==='Temiz').length;$('rPending').textContent=rooms.filter(r=>/bekliyor|temizlikte|kontrol/i.test(norm(get(r,'status')))).length;$('rDone').textContent=tasks.filter(t=>/tamamlandı|completed/i.test(norm(t.status))).length;$('rFixed').textContent=issues.filter(i=>/çözüldü|resolved|closed/i.test(norm(i.status))).length;let map={};rooms.forEach(r=>{let s=norm(get(r,'status')||'Temizlik bekliyor');map[s]=(map[s]||0)+1});$('distribution').innerHTML=Object.entries(map).map(([s,n])=>'<p>'+pill(s)+' <strong style="float:right">'+n+'</strong></p>').join('')||'<div class="empty">Oda verisi yok.</div>'}
+function renderStaff(){$('staffTable').innerHTML=table(['Personel','Rol','Durum'],staff.map(s=>'<tr><td>'+esc(s.full_name||s.email||'İsimsiz')+'<div class="muted">'+esc(s.email||'')+'</div></td><td>'+esc(roleNames[s.role]||s.role||'Tanımsız')+'</td><td>'+pill(s.is_active===false?'Pasif':'Aktif')+'</td></tr>'),'Personel profili bulunamadı.')}
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginBtn').disabled=true;message($('loginMsg'),'Giriş kontrol ediliyor…');try{let {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;session=data.session;await openSession()}catch(e){message($('loginMsg'),'Giriş yapılamadı. E-posta, şifre ve kullanıcı hesabını kontrol edin.','error')}finally{$('loginBtn').disabled=false}});
+async function openSession(){if(!session?.user){showLogin();return}try{let {data,error}=await db.from('profiles').select('id,full_name,role,is_active').eq('id',session.user.id).maybeSingle();if(error||!data)throw Error('Bu kullanıcı için profiles tablosunda personel profili bulunamadı.');if(data.is_active===false)throw Error('Kullanıcı hesabı devre dışı.');profile=data;$('loginScreen').classList.add('hidden');$('shell').classList.remove('hidden');$('logout').classList.remove('hidden');$('userLabel').textContent=(profile.full_name||session.user.email)+' · '+(roleNames[profile.role]||profile.role);document.querySelector('[data-view="staff"]').classList.toggle('hidden',profile.role!=='yonetici');view('dashboard');await load()}catch(e){await db.auth.signOut();showLogin(e.message)}}
+$('logout').onclick=async()=>{await db.auth.signOut();$('loginForm').reset();showLogin('Güvenli çıkış yapıldı.')};$('nav').onclick=e=>{let b=e.target.closest('[data-view]');if(b&&!b.classList.contains('hidden'))view(b.dataset.view)};$('refresh').onclick=load;$('refreshStaff').onclick=load;$('roomSearch').oninput=renderRooms;$('roomFilter').onchange=renderRooms;$('taskFilter').onchange=renderTasks;$('issueFilter').onchange=renderIssues;
+$('showRoom').onclick=()=>{$('roomFormBox').classList.remove('hidden')};$('cancelRoom').onclick=()=> $('roomFormBox').classList.add('hidden');$('showTask').onclick=()=>{$('taskFormBox').classList.remove('hidden')};$('cancelTask').onclick=()=> $('taskFormBox').classList.add('hidden');$('showIssue').onclick=()=>{$('issueFormBox').classList.remove('hidden')};$('cancelIssue').onclick=()=> $('issueFormBox').classList.add('hidden');
+$('roomForm').onsubmit=async e=>{e.preventDefault();try{let {error}=await db.from('rooms').insert({room_number:$('roomNo').value.trim(),building:$('building').value.trim()||null,room_type:$('roomType').value,status:$('roomInitial').value});if(error)throw error;e.target.reset();$('roomFormBox').classList.add('hidden');await load();note('Oda kaydedildi.')}catch(e){note('Oda kaydedilemedi: '+e.message,'error')}};
+$('taskForm').onsubmit=async e=>{e.preventDefault();try{let {error}=await db.from('tasks').insert({room_id:$('taskRoom').value,task_type:$('taskType').value,assigned_to:$('taskAssignee').value||null,priority:$('taskPriority').value,notes:$('taskNotes').value.trim()||null,status:'Bekliyor',created_by:session.user.id});if(error)throw error;e.target.reset();$('taskFormBox').classList.add('hidden');await load();note('Görev oluşturuldu.')}catch(e){note('Görev oluşturulamadı: '+e.message,'error')}};
+$('issueForm').onsubmit=async e=>{e.preventDefault();try{let {error}=await db.from('issues').insert({room_id:$('issueRoom').value,description:$('issueDesc').value.trim(),priority:$('issuePriority').value,assigned_to:$('issueAssignee').value||null,status:'Açık',reported_by:session.user.id});if(error)throw error;e.target.reset();$('issueFormBox').classList.add('hidden');await load();note('Arıza kaydı oluşturuldu.')}catch(e){note('Arıza kaydedilemedi: '+e.message,'error')}};
+$('export').onclick=()=>{let rows=[['Oda','Bina','Oda tipi','Durum'],...rooms.map(r=>[roomNo(r),get(r,'building','building_name'),roomType(r),norm(get(r,'status'))])];let csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');let u=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=u;a.download='oda-durum-raporu.csv';a.click();URL.revokeObjectURL(u)};
+async function start(){if(!window.supabase?.createClient){showLogin('Bağlantı kütüphanesi yüklenemedi. İnternet bağlantısını kontrol edin.');return}db=window.supabase.createClient(URL_DB,KEY);let {data,error}=await db.auth.getSession();if(error){showLogin('Oturum kontrol edilemedi. Sayfayı yenileyin.');return}session=data.session;if(session)await openSession();db.auth.onAuthStateChange((_e,s)=>{session=s;if(!s)showLogin()})}start();
+</script></body></html>
