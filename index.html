@@ -776,5 +776,19 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(err => console.warn("Çevrimdışı kullanım etkinleştirilemedi:", err)));
 }
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://xmbnjkphoxgxpocwhqyz.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_aca-LlYGaK_XNatU8ipdzQ_QSu60h0a";
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+  console.log("Supabase bağlantı ayarları yüklendi.");
+</script>
+
 </body>
 </html>
