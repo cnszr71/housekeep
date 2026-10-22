@@ -1,0 +1,20 @@
+{
+  "name": "Ağaoğlu Oteli – Kat Hizmetleri",
+  "short_name": "Kat Hizmetleri",
+  "description": "Otel oda ve kat hizmetleri yönetimi",
+  "lang": "tr-TR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eaf0f0",
+  "theme_color": "#0f3d3e",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
