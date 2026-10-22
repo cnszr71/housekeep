@@ -234,7 +234,8 @@ function buildTasks(only) {
   for (const [no, d] of Object.entries(DEFS)) {
     if (only && no !== only) continue;
     const r = state.rooms[no];
-    if (r.kd || state.tasks.some(t => t.oda === no)) continue;
+    const arizali = state.issues.some(x => x.oda === no && x.status < 2);
+    if (r.kd || arizali || state.tasks.some(t => t.oda === no)) continue;
     let tur;
     if (d.bina === 'ana') {
       if (r.durum === 'hazir' || r.durum === 'belirsiz') continue;   /* temiz ve hazır ya da seçilmemiş: görev yok */
@@ -300,8 +301,11 @@ function viewPlan() {
     return `<label class="chk"><input type="checkbox" data-act="aexit" data-room="${no}" ${r.durum === 'cikis' ? 'checked' : ''} ${locked(no) ? 'disabled' : ''}> ${no}</label>`;
   }).join('');
   const pending = buildTasks();
+  const openIssues = state.issues.filter(x => x.status < 2).sort((a, b) => a.oda.localeCompare(b.oda, 'tr'));
+  const issuePanel = openIssues.length ? `<div class="panel" style="border-color:var(--bad)"><h2>Devam eden arızalar · ${openIssues.length}</h2><p class="note">Arıza kapanana kadar bu odalar kullanım dışıdır; temizlik görevine dahil edilmez.</p><div class="scroll"><table><thead><tr><th>Oda</th><th>Arıza</th><th>Önem</th><th>Durum</th><th>Kayıt tarihi</th></tr></thead><tbody>${openIssues.map(x => `<tr class="d-arizali"><td><b>${esc(x.oda)}</b> <span class="tag hot">Kullanım dışı</span></td><td>${esc(x.metin)}</td><td>${esc(ONEM[x.onem] || x.onem || '-')}</td><td>${esc(ISTAT[x.status] || 'Açık')}</td><td>${new Date(x.t).toLocaleDateString('tr-TR')}</td></tr>`).join('')}</tbody></table></div></div>` : '';
   const bulkOpts = Object.entries(DURUM_ANA).filter(([k]) => k !== 'belirsiz').map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
   return `
+    ${issuePanel}
     ${pending.length ? `<div class="panel" style="border-color:var(--s0);background:var(--s0bg)"><div class="row"><b>${pending.length} oda kat görevlilerine henüz gönderilmedi:</b>
       <span>${pending.slice().sort(byPrio).map(t => t.oda).join(', ')}</span><button class="btn" data-act="send">Ortak listeye gönder</button></div></div>` : ''}
     ${state.sent ? '<p class="note">Bugünkü plan gönderildi. Sonradan işaretlediğiniz odalar da “Ortak listeye gönder” ile listeye eklenir.</p>' : ''}
