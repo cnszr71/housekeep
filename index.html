@@ -255,7 +255,7 @@ function buildTasks(only) {
 /* ---------- görünümler ---------- */
 function viewLogin() {
   return `<div class="login panel">
-    <img class="hotel-logo" src="logo-aga-sef.png" alt="Ağaoğlu Oteli logosu"><h2>Kat Hizmetleri</h2>
+    <img class="hotel-logo" src="https://raw.githubusercontent.com/cnszr71/housekeep/main/logo-aga-sef.png" alt="Ağaoğlu Oteli logosu"><h2>Kat Hizmetleri</h2>
     <form id="loginForm" class="row" style="flex-direction:column;align-items:stretch">
       <label>Kullanıcı adı<input name="u" autocomplete="username" required></label>
       <label>Şifre<input name="p" type="password" autocomplete="current-password" required></label>
@@ -589,7 +589,7 @@ function render() {
   const unsent = isRecep ? buildTasks().length : 0;
   $('#root').innerHTML = `
     <header><div class="wrap">
-      <div class="brandline"><img class="hotel-logo" src="logo-aga-sef.png" alt="Ağaoğlu Oteli logosu"><h1>Kat Hizmetleri</h1></div>
+      <div class="brandline"><img class="hotel-logo" src="https://raw.githubusercontent.com/cnszr71/housekeep/main/logo-aga-sef.png" alt="Ağaoğlu Oteli logosu"><h1>Kat Hizmetleri</h1></div>
       <span class="pill">${esc(me.ad)}</span>
       <button class="hbtn" data-act="sound" aria-pressed="${soundOn}">Ses ${soundOn ? 'açık' : 'kapalı'}</button>
       ${isRecep ? `<button class="hbtn" data-act="speak" aria-pressed="${speakOn}">Sesli okuma ${speakOn ? 'açık' : 'kapalı'}</button>` : ''}
