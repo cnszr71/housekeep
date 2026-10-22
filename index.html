@@ -287,11 +287,12 @@ function viewPlan() {
       const no = String(f * 100 + i), r = state.rooms[no], d = DEFS[no], lk = locked(no) || r.kd;
       cnt[r.durum === 'hazir' ? 'hazir' : r.durum === 'konaklamali' ? 'dolu' : r.durum === 'belirsiz' ? 'belirsiz' : 'kirli']++;
       const arizali = state.issues.some(x => x.oda === no && x.status < 2);
-      rows += `<tr class="d-${r.durum}${arizali ? ' d-arizali' : ''}"><td><b>${no}</b>${arizali ? ' <span class="tag hot">Arızalı</span>' : ''}</td><td>${d.tip}</td>
-        <td><select data-act="rdurum" data-room="${no}" ${lk ? 'disabled' : ''} aria-label="${no} durumu">
+      const odaKapali = lk || arizali;
+      rows += `<tr class="d-${r.durum}${arizali ? ' d-arizali' : ''}"><td><b>${no}</b>${arizali ? ' <span class="tag hot">Arızalı · Kullanım dışı</span>' : r.kd ? ' <span class="tag hot">Kullanım dışı</span>' : ''}</td><td>${d.tip}</td>
+        <td><select data-act="rdurum" data-room="${no}" ${odaKapali ? 'disabled' : ''} aria-label="${no} durumu">
           ${Object.entries(DURUM_ANA).map(([k, v]) => `<option value="${k}" ${r.durum === k ? 'selected' : ''}>${v}</option>`).join('')}</select></td>
-        <td><input type="time" data-act="rgiris" data-room="${no}" value="${r.giris}" ${lk ? 'disabled' : ''} aria-label="${no} misafir giriş saati"></td>
-        <td><input type="checkbox" data-act="rvip" data-room="${no}" ${r.vip ? 'checked' : ''} ${lk ? 'disabled' : ''} aria-label="${no} VIP"></td></tr>`;
+        <td><input type="time" data-act="rgiris" data-room="${no}" value="${r.giris}" ${odaKapali ? 'disabled' : ''} aria-label="${no} misafir giriş saati"></td>
+        <td><input type="checkbox" data-act="rvip" data-room="${no}" ${r.vip ? 'checked' : ''} ${odaKapali ? 'disabled' : ''} aria-label="${no} VIP"></td></tr>`;
     }
   }
   const chips = ANNEX.map(no => {
@@ -323,7 +324,7 @@ function viewPlan() {
 /* --- Bugün (resepsiyon) --- */
 function roomCat(no) {
   const r = state.rooms[no], d = DEFS[no];
-  if (state.issues.some(i => i.oda === no && i.status < 2)) return 'arizali';
+  if (state.issues.some(i => i.oda === no && i.status < 2)) return 'kd';
   if (r.kd) return 'kd';
   const t = state.tasks.filter(x => x.oda === no).slice(-1)[0];
   if (t && t.status === 2) return 'kontrol';
@@ -336,8 +337,10 @@ function cellInfo(no) {
   const t = state.tasks.filter(x => x.oda === no).slice(-1)[0];
   const who = t && t.status === 1 && t.baslayan ? ' · ' + esc(t.baslayan) : t && t.status === 2 && t.bitiren ? ' · ' + esc(t.bitiren) : '';
   const base = d.bina === 'ek' ? 'Dolu' : 'Konaklamalı';
-  if (cat === 'arizali') return ['arizali', r.kd ? 'Arızalı · kullanım dışı' : 'Arızalı'];
-  if (cat === 'kd') return ['kd', 'Kullanım dışı'];
+  if (cat === 'kd') {
+    const openFault = state.issues.some(i => i.oda === no && i.status < 2);
+    return ['kd', openFault ? 'Arızalı · kullanım dışı' : 'Kullanım dışı'];
+  }
   if (cat === 'kontrol') return ['c2', 'Temiz, kontrol bekliyor' + who];
   if (cat === 'kirli') return t ? (t.status === 1 ? ['c1', 'Temizleniyor' + who] : ['c0', 'Kirli, sırada']) : ['c0', 'Kirli, görev gönderilmedi'];
   if (cat === 'dolu') {
