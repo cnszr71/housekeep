@@ -471,7 +471,7 @@ function dayStats(d) {
   const ppl = {};
   const bump = (name, k) => { if (!name) return; const key = norm(name); (ppl[key] = ppl[key] || { n: name, c: 0, k: 0 })[k]++; };
   tasks.forEach(t => { bump(t.bitiren, 'c'); bump(t.kontrolEden, 'k'); });
-  const summary = [['Temizlenen oda', done], ['Kontrol edilen oda', tasks.filter(t => t.status === 3).length], ['Bekleyen ya da devreden oda', tasks.filter(t => t.status < 2).length]];
+  const summary = [['Temizlenen oda', done], ['Kontrol edilen oda', tasks.filter(t => t.status === 3).length], ['Kontrol bekleyen oda', tasks.filter(t => t.status === 2).length], ['Bekleyen ya da devreden oda', tasks.filter(t => t.status < 2).length]];
   let end = '', endCounts = null;
   if (x.rooms) {
     const c = { hazir: 0, dolu: 0, kirli: 0, belirsiz: 0 };
