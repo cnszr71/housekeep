@@ -599,7 +599,7 @@ function render() {
       <b>${dayLabel(iso(Date.now()))}</b><span id="clock">${hhmm(Date.now())}</span>
       ${isRecep ? '<button class="btn small ghost" data-act="newday">Günü kapat</button>' : ''}
     </div></div>
-    <div class="demo"><div class="wrap">Demo sürümü: veriler yalnızca bu tarayıcıda saklanır; farklı cihazlar arasında eşitleme ve gerçek kullanıcı doğrulaması henüz yoktur.</div></div>
+    
     <nav><div class="wrap" role="tablist">${tabs.map(([k, n]) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${k === tab}">${n}${k === 'plan' && unsent ? `<span class="badge">${unsent}</span>` : ''}${k === 'ariza' && openIssues ? `<span class="badge">${openIssues}</span>` : ''}${k === 'bugun' && me.rol === 'yonetici' && state.tasks.some(t => t.status === 2) ? `<span class="badge">${state.tasks.filter(t => t.status === 2).length}</span>` : ''}</button>`).join('')}</div></nav>
     <main>${views[tab]()}</main>`;
 }
