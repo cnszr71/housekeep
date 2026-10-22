@@ -744,8 +744,8 @@ document.addEventListener('click', e => {
     }
   }
   else if (a === 'newday') {
-    const openMain = state.tasks.filter(t => t.status < 2 && DEFS[t.oda].bina === 'ana').length;
-    if (!confirm(`${dayLabel(state.day)} günü kapatılsın mı?\n\nKayıtlar arşive alınır.${openMain ? ' ' + openMain + ' ana bina görevi tamamlanmadı, bu odalar kirli kalır.' : ''} Tamamlanmayan ek bina işleri ertesi güne devreder. Gün değişince bu işlem kendiliğinden de yapılır.`)) return;
+    const openMain = state.tasks.filter(t => t.status < 3 && DEFS[t.oda].bina === 'ana').length;
+    if (!confirm(`${dayLabel(state.day)} günü kapatılsın mı?\n\nKayıtlar arşive alınır.${openMain ? ' ' + openMain + ' ana bina görevi tamamlanmadı veya yönetici kontrolünden geçmedi; bu odalar kirli kalır.' : ''} Tamamlanmayan ek bina işleri ertesi güne devreder. Gün değişince bu işlem kendiliğinden de yapılır.`)) return;
     closeDay(actor() || me.ad);
   }
   else return;
