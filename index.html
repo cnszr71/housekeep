@@ -6,6 +6,21 @@
 <style>
 :root{font-family:Arial,Helvetica,sans-serif;color:#1f2937;background:#f3f6f9}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{border:0;border-radius:8px;padding:10px 14px;background:#1769aa;color:#fff;font-weight:600;cursor:pointer}button:disabled{opacity:.55}.secondary{background:#e8eef4;color:#17324d}header{background:#17324d;color:white;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}header h1{font-size:20px;margin:0}header p{margin:5px 0 0;color:#d5e2ee;font-size:13px}.hidden{display:none!important}.login{max-width:430px;margin:8vh auto;padding:24px}.panel{background:#fff;border:1px solid #e0e7ee;border-radius:13px;padding:20px;box-shadow:0 3px 14px #17324d0a}main{max-width:1450px;margin:auto;padding:22px}.layout{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:calc(100vh - 72px)}nav{background:#fff;border-right:1px solid #e0e7ee;padding:14px}nav button{display:block;width:100%;text-align:left;background:transparent;color:#334155;margin:3px 0}nav button.active,nav button:hover{background:#e8eef4;color:#17324d}.view{display:none}.view.active{display:block}.title{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}.title h2{margin:0}.muted{font-size:14px;color:#64748b;line-height:1.5}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}.stat{background:white;border:1px solid #e0e7ee;border-radius:12px;padding:16px}.stat span{display:block;color:#64748b;font-size:13px}.stat strong{display:block;font-size:27px;margin-top:7px}.section{margin-top:16px}.table-wrap{overflow:auto;border:1px solid #e5eaf0;border-radius:9px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:11px;border-bottom:1px solid #e5eaf0;vertical-align:top}th{background:#f7f9fb;color:#475569;font-size:12px}label{display:block;font-weight:600;font-size:13px;margin:12px 0 6px}input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}textarea{min-height:75px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}.wide{grid-column:1/-1}.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}.message{display:none;padding:11px;border-radius:8px;margin:12px 0;font-size:14px;white-space:pre-wrap}.message.show{display:block}.error{background:#fee2e2;color:#991b1b}.success{background:#dcfce7;color:#166534}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.toolbar input,.toolbar select{width:auto;min-width:170px}.roomgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.room{background:white;border:1px solid #dbe3eb;border-radius:10px;padding:13px}.room strong{font-size:19px}.room small{display:block;color:#64748b;margin:5px 0}.pill{display:inline-block;border-radius:20px;background:#e8eef4;padding:4px 8px;font-size:12px}.empty{padding:24px;text-align:center;color:#64748b}.login h2{margin-top:0}footer{text-align:center;color:#64748b;padding:22px;font-size:12px}@media(max-width:760px){header{padding:14px}header h1{font-size:17px}.layout{grid-template-columns:1fr}nav{display:flex;overflow:auto;padding:7px;border-right:0;border-bottom:1px solid #e0e7ee}nav button{width:auto;white-space:nowrap;margin:0 3px}main{padding:13px}.formgrid{grid-template-columns:1fr}.wide{grid-column:auto}.login{margin:4vh 14px}}
 </style>
+<script>
+/* Eski demo sürümünün tarayıcı önbelleğinde kalmasını engelle. */
+(async function(){
+  try {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(reg => reg.unregister()));
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(key => caches.delete(key)));
+    }
+  } catch (e) { console.warn('Önbellek temizliği tamamlanamadı:', e); }
+})();
+</script>
 </head>
 <body>
 <header><div><h1>Kat Hizmetleri Yönetim Sistemi</h1><p>Oda yönetimi · Görevler · Arıza takibi · Raporlama</p></div><div style="display:flex;gap:10px;align-items:center"><span id="userLabel" style="font-size:13px"></span><button id="logout" class="secondary hidden">Çıkış yap</button></div></header>
