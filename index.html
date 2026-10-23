@@ -50,7 +50,32 @@ function table(head,rows,empty='Kayıt bulunamadı.'){return rows.length?'<div c
 function hideForms(){['roomFormBox','taskFormBox','issueFormBox'].forEach(id=>$(id).classList.add('hidden'))}
 function view(v){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('active',x.dataset.view===v));hideForms()}
 async function read(tableName,order){let q=db.from(tableName).select('*');if(order)q=q.order(order,{ascending:true});let {data,error}=await q;if(error)throw Error(tableName+': '+error.message);return data||[]}
-async function load(){try{[rooms,tasks,issues,staff]=await Promise.all([read('rooms','room_number'),read('tasks','created_at'),read('issues','created_at'),read('profiles','full_name')]);tasks.reverse();issues.reverse();fillSelects();render();message($('msg'),'')}catch(e){notify('Veriler alınamadı: '+e.message,'error')}}
+async function load(){
+  const results=await Promise.allSettled([
+    read('rooms','room_number'),read('tasks','created_at'),
+    read('issues','created_at'),read('profiles','full_name')
+  ]);
+  const labels=['Odalar','Görevler','Arıza kayıtları','Personel'];
+  const targets=[rooms,tasks,issues,staff];
+  const errors=[];
+  results.forEach((r,i)=>{
+    if(r.status==='fulfilled'){
+      if(i===0)rooms=r.value;
+      if(i===1)tasks=r.value.reverse();
+      if(i===2)issues=r.value.reverse();
+      if(i===3)staff=r.value;
+    }else{
+      if(i===0)rooms=[];
+      if(i===1)tasks=[];
+      if(i===2)issues=[];
+      if(i===3)staff=[];
+      errors.push(labels[i]+': '+(r.reason?.message||'erişim başarısız'));
+    }
+  });
+  fillSelects();render();
+  if(errors.length)notify('Bazı veriler yüklenemedi. '+errors.join(' | '),'error');
+  else message($('msg'),'');
+}
 function fillSelect(id,list,label,value,first){let el=$(id);if(!el)return;let old=el.value;el.innerHTML=(first!==undefined?'<option value="">'+esc(first)+'</option>':'')+list.map(x=>'<option value="'+esc(value(x))+'">'+esc(label(x))+'</option>').join('');if([...el.options].some(o=>o.value===old))el.value=old}
 function fillSelects(){fillSelect('taskRoom',rooms,r=>roomNo(r)+' · '+roomType(r),r=>r.id);fillSelect('issueRoom',rooms,r=>roomNo(r)+' · '+roomType(r),r=>r.id);let active=staff.filter(x=>x.is_active!==false);fillSelect('taskAssignee',active,x=>x.full_name||x.email||x.id,x=>x.id,'Atanmamış');fillSelect('issueAssignee',active.filter(x=>['teknik','yonetici'].includes(x.role)),x=>x.full_name||x.email||x.id,x=>x.id,'Atanmamış')}
 function pill(s){return '<span class="pill">'+esc(norm(s))+'</span>'}
@@ -81,6 +106,7 @@ document.querySelectorAll('[data-role-choice]').forEach(b=>b.onclick=async()=>{
     $('userLabel').textContent=roles[chosenRole]+' · Misafir oturumu';
     $('staffNav').classList.toggle('hidden',chosenRole!=='yonetici');
     await load();
+    view('rooms');
   }catch(e){
     $('selectedRoleNote').textContent='Şifresiz giriş açılamadı: '+(e.message||'Veritabanı erişimini kontrol edin.');
     document.querySelectorAll('[data-role-choice]').forEach(x=>x.disabled=false);
