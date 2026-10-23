@@ -70,7 +70,7 @@ document.querySelectorAll('[data-role-choice]').forEach(b=>b.onclick=async()=>{
   $('selectedRoleNote').textContent='Seçilen bölüm: '+(roles[chosenRole]||chosenRole);
   document.querySelectorAll('[data-role-choice]').forEach(x=>x.disabled=true);
   try{
-    message($('loginMsg'),'Giriş yapılıyor…');
+    $('selectedRoleNote').textContent='Giriş yapılıyor…';
     const {data,error}=await db.auth.signInAnonymously();
     if(error)throw error;
     session=data.session;
@@ -82,7 +82,7 @@ document.querySelectorAll('[data-role-choice]').forEach(b=>b.onclick=async()=>{
     $('staffNav').classList.toggle('hidden',chosenRole!=='yonetici');
     await load();
   }catch(e){
-    message($('loginMsg'),'Şifresiz giriş açılamadı: '+(e.message||'Veritabanı erişimini kontrol edin.'),'error');
+    $('selectedRoleNote').textContent='Şifresiz giriş açılamadı: '+(e.message||'Veritabanı erişimini kontrol edin.');
     document.querySelectorAll('[data-role-choice]').forEach(x=>x.disabled=false);
   }
 });
